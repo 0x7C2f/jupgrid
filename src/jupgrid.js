@@ -148,11 +148,11 @@ let {
 async function loadQuestion() {
 	try {
 		await downloadTokensList();
-		logger.log("Updated Token List\n")
-		logger.log(`Connected Wallet: ${displayAddress}\n`);
+		console.log("Updated Token List\n")
+		console.log(`Connected Wallet: ${displayAddress}\n`);
 
 		if (!fs.existsSync("userSettings.json")) {
-			logger.log("No user data found. Starting with fresh inputs.");
+			console.log("No user data found. Starting with fresh inputs.");
 			initialize();
 		} else {
 			const askForLoadSettings = () => {
@@ -165,8 +165,8 @@ async function loadQuestion() {
 							try {
 								// Show user data
 								const userSettings = loaduserSettings();
-								logger.log("User data loaded successfully.");
-								logger.log(
+								console.log("User data loaded successfully.");
+								console.log(
 									`\nPrevious JupGrid Settings:
 Token A: ${chalk.cyan(userSettings.selectedTokenA)}
 Token B: ${chalk.magenta(userSettings.selectedTokenB)}
@@ -195,17 +195,17 @@ Monitoring delay: ${userSettings.monitorDelay}ms\n`
 												stopLossUSD,
 												infinityTarget
 											} = userSettings);
-											logger.log(
+											console.log(
 												"Settings applied successfully!"
 											);
 											initialize();
 										} else if (confirmResponse === "N") {
-											logger.log(
+											console.log(
 												"Discarding saved settings, please continue."
 											);
 											initialize(); // Start initialization with blank settings
 										} else {
-											logger.log(
+											console.log(
 												"Invalid response. Please type 'Y' or 'N'."
 											);
 											askForLoadSettings(); // Re-ask the original question
@@ -219,10 +219,10 @@ Monitoring delay: ${userSettings.monitorDelay}ms\n`
 								initialize(); // Proceed with initialization in case of error
 							}
 						} else if (responseQ === "N") {
-							logger.log("Starting with blank settings.");
+							console.log("Starting with blank settings.");
 							initialize();
 						} else {
-							logger.log(
+							console.log(
 								"Invalid response. Please type 'Y' or 'N'."
 							);
 							askForLoadSettings(); // Re-ask if the response is not Y/N
@@ -268,7 +268,7 @@ async function initialize() {
 			(token) => token.symbol === userSettings.selectedTokenA
   	);
   	if (!tokenAExists) {
-			logger.log(
+			console.log(
 				`Token ${userSettings.selectedTokenA} from user data not found in the updated token list. Please re-enter.`
 			);
 			userSettings.selectedTokenA = null; // Reset selected token A
@@ -280,13 +280,13 @@ async function initialize() {
 	}
 
 	while (!validTokenA) {
-		logger.log("During this Beta stage, we are only allowing USDC as Token A. Is that ok?");
+		console.log("During this Beta stage, we are only allowing USDC as Token A. Is that ok?");
 		// Simulate the user entered 'USDC' as their answer
 		const answer = 'USDC';
 
 		const token = tokens.find((t) => t.symbol === answer);
 		if (token) {
-			logger.log(`Selected Token: ${token.symbol}
+			console.log(`Selected Token: ${token.symbol}
 Token Address: ${token.address}
 Token Decimals: ${token.decimals}`);
 			const confirmAnswer = await questionAsync(
@@ -302,7 +302,7 @@ Token Decimals: ${token.decimals}`);
 				selectedDecimalsA = token.decimals;
 			}
 		} else {
-			logger.log(`Token ${answer} not found. Please Try Again.`);
+			console.log(`Token ${answer} not found. Please Try Again.`);
 		}
 	}
 
@@ -311,7 +311,7 @@ Token Decimals: ${token.decimals}`);
 			(token) => token.symbol === userSettings.selectedTokenB
 		);
 		if (!tokenBExists) {
-			logger.log(
+			console.log(
 				`Token ${userSettings.selectedTokenB} from user data not found in the updated token list. Please re-enter.`
 			);
 			userSettings.selectedTokenB = null; // Reset selected token B
@@ -328,7 +328,7 @@ Token Decimals: ${token.decimals}`);
 		);
 		const token = tokens.find((t) => t.symbol === answer);
 		if (token) {
-			logger.log(`Selected Token: ${token.symbol}
+			console.log(`Selected Token: ${token.symbol}
 Token Address: ${token.address}
 Token Decimals: ${token.decimals}`);
 			const confirmAnswer = await questionAsync(
@@ -344,7 +344,7 @@ Token Decimals: ${token.decimals}`);
 				selectedDecimalsB = token.decimals;
 			}
 		} else {
-			logger.log(`Token ${answer} not found. Please Try Again.`);
+			console.log(`Token ${answer} not found. Please Try Again.`);
 		}
 	}
 
@@ -362,7 +362,7 @@ Token Decimals: ${token.decimals}`);
 			userSettings.infinityTarget = infinityTarget;
 			validInfinityTarget = true;
 		} else {
-			logger.log(
+			console.log(
 				"Invalid infinity target value. Please enter a valid integer that is larger than the stop loss value."
 			);
 		}
@@ -373,7 +373,7 @@ Token Decimals: ${token.decimals}`);
 	if (userSettings.spread) {
 		validSpread = !isNaN(parseFloat(userSettings.spread));
 		if (!validSpread) {
-			logger.log(
+			console.log(
 				"Invalid spread percentage found in user data. Please re-enter."
 			);
 			userSettings.spread = null; // Reset spread percentage
@@ -390,7 +390,7 @@ Token Decimals: ${token.decimals}`);
 			userSettings.spread = spread;
 			validSpread = true;
 		} else {
-			logger.log(
+			console.log(
 				"Invalid spread percentage. Please enter a valid number (No % Symbol)."
 			);
 		}
@@ -399,7 +399,7 @@ Token Decimals: ${token.decimals}`);
 	if (userSettings.stopLossUSD) {
 		validStopLossUSD = !isNaN(parseFloat(userSettings.stopLossUSD));
 		if (!validStopLossUSD) {
-			logger.log(
+			console.log(
 				"Invalid stop loss value found in user data. Please re-enter."
 			);
 			userSettings.stopLossUSD = null; // Reset stop loss value
@@ -416,7 +416,7 @@ Token Decimals: ${token.decimals}`);
 			userSettings.stopLossUSD = stopLossUSD;
 			validStopLossUSD = true;
 		} else {
-			logger.log(
+			console.log(
 				"Invalid stop loss value. Please enter a valid number."
 			);
 		}
@@ -431,7 +431,7 @@ Token Decimals: ${token.decimals}`);
 			monitorDelay = parsedMonitorDelay;
 			validMonitorDelay = true;
 		} else {
-			logger.log(
+			console.log(
 				"Invalid monitor delay. Please enter a valid number greater than or equal to 5000."
 			);
 		}
@@ -453,7 +453,7 @@ Token Decimals: ${token.decimals}`);
 		infinityTarget
 	);
 	// First Price check during init
-	logger.log("Getting Latest Price Data...");
+	console.log("Getting Latest Price Data...");
 	tradeSizeInLamports = 1 * Math.pow(10, selectedDecimalsB);
 	const queryParams = {
 		inputMint: selectedAddressB,
@@ -467,7 +467,7 @@ Token Decimals: ${token.decimals}`);
 	startPrice = response.data.outAmount;
 
 	console.clear();
-	logger.log(`Starting JupGrid v${version}
+	console.log(`Starting JupGrid v${version}
 Your Token Selection for A - Symbol: ${chalk.cyan(selectedTokenA)}, Address: ${chalk.cyan(selectedAddressA)}
 Your Token Selection for B - Symbol: ${chalk.magenta(selectedTokenB)}, Address: ${chalk.magenta(selectedAddressB)}`);
 	startInfinity();
@@ -478,7 +478,7 @@ if (loaded === false) {
 }
 
 async function startInfinity() {
-	logger.log(`Checking for existing orders to cancel...`);
+	console.log(`Checking for existing orders to cancel...`);
 	await jitoController("cancel");
 	const initialBalances = await getBalance(
 		payer,
@@ -506,7 +506,7 @@ async function getBalance(
 		const lamports = await connection.getBalance(payer.publicKey);
 		const solBalance = lamports / solanaWeb3.LAMPORTS_PER_SOL;
 		if (solBalance === 0) {
-			logger.log(`You do not have any SOL, please check and try again.`);
+			console.log(`You do not have any SOL, please check and try again.`);
 			process.exit(0);
 		}
 		let usdBalance = 0;
@@ -550,7 +550,7 @@ async function getBalance(
 					.uiAmount;
 			let usdBalance = 0;
 			if (balance === 0) {
-				logger.log(
+				console.log(
 					`You do not have a balance for ${mintAddress}, please check and try again.`
 				);
 				process.exit(0);
@@ -578,7 +578,7 @@ async function getBalance(
 			} else {
 				usdBalance = balance; // If the token is USDC, its balance is its USD equivalent
 				if (usdBalance === 0) {
-					logger.log(
+					console.log(
 						`You do not have any USDC, please check and try again.`
 					);
 					process.exit(0);
@@ -602,7 +602,7 @@ async function getBalance(
 	);
 
 	if (resultA.balance === 0 || resultB.balance === 0) {
-		logger.log(
+		console.log(
 			"Please ensure you have a balance in both tokens to continue."
 		);
 		process.exit(0);
@@ -633,7 +633,7 @@ function formatElapsedTime(startTime) {
 	minutes = String(minutes).padStart(2, "0");
 	seconds = String(seconds).padStart(2, "0");
 
-	logger.log(`\u{23F1}  Run time: ${hours}:${minutes}:${seconds}`);
+	console.log(`\u{23F1}  Run time: ${hours}:${minutes}:${seconds}`);
 }
 
 async function fetchPrice() {
@@ -675,7 +675,7 @@ async function infinityGrid() {
 	if (currUsdTotalBalance < stopLossUSD) {
 		// Emergency Stop Loss
 		console.clear();
-		logger.log(`\n\u{1F6A8} Emergency Stop Loss Triggered! - Exiting`);
+		console.log(`\n\u{1F6A8} Emergency Stop Loss Triggered! - Exiting`);
 		stopLoss = true;
 		process.kill(process.pid, "SIGINT");
 	}
@@ -700,7 +700,7 @@ async function infinityGrid() {
 		infinitySellOutput * Math.pow(10, selectedDecimalsA)
 	);
 
-	logger.log(`Current Market Price: ${priceResponse.toFixed(5)}
+	console.log(`Current Market Price: ${priceResponse.toFixed(5)}
 	Infinity Target: ${infinityTarget}
 	Current ${selectedTokenB} Balance: ${currentBalances.balanceB} (${currentBalances.usdBalanceB.toFixed(2)})
 
@@ -724,17 +724,17 @@ async function infinityGrid() {
 		infinityBuyInput * Math.pow(10, selectedDecimalsA)
 	);
 
-	logger.log(`\n${selectedTokenB} down ${spread}%: ${newPriceBDown.toFixed(5)}
+	console.log(`\n${selectedTokenB} down ${spread}%: ${newPriceBDown.toFixed(5)}
 	Amount of ${selectedTokenB} to send: ${infinityBuyOutput.toFixed(5)} (${infinityBuyOutputLamports} lamports)
 	Amount of ${selectedTokenA} to receive: ${infinityBuyInput.toFixed(5)} (${infinityBuyInputLamports} lamports)`);
 
-	logger.log(infinityBuyInputLamports);
-	logger.log(infinityBuyOutputLamports);
-	logger.log(infinitySellInputLamports);
-	logger.log(infinitySellOutputLamports);
+	console.log(infinityBuyInputLamports);
+	console.log(infinityBuyOutputLamports);
+	console.log(infinitySellInputLamports);
+	console.log(infinitySellOutputLamports);
 
 	await jitoController("infinity");
-	logger.log(
+	console.log(
 		"Pause for 5 seconds to allow orders to finalize on blockchain.",
 		await delay(5000)
 	);
@@ -752,7 +752,7 @@ async function monitor() {
 			await handleOrders(checkArray);
 			break; // Break the loop if we've successfully handled the price monitoring
 		} catch (error) {
-			logger.log(error);
+			console.log(error);
 			console.error(
 				`Error: Connection or Token Data Error (Monitor Price) - (Attempt ${retries + 1} of ${maxRetries})`
 			);
@@ -772,7 +772,7 @@ async function handleOrders(checkArray) {
 	if (checkArray.length !== 2) {
 		infinityGrid();
 	} else {
-		logger.log("2 open orders. Waiting for change.");
+		console.log("2 open orders. Waiting for change.");
 		await delay(monitorDelay);
 		await monitor();
 	}
@@ -801,12 +801,12 @@ async function updateUSDVal(mintAddress, balance, decimals) {
 
 async function updateMainDisplay() {
 	console.clear();
-	logger.log(`Jupgrid v${version}`);
-	logger.log(`\u{267E}  Infinity Mode`);
-	logger.log(`\u{1F4B0} Wallet: ${displayAddress}`);
+	console.log(`Jupgrid v${version}`);
+	console.log(`\u{267E}  Infinity Mode`);
+	console.log(`\u{1F4B0} Wallet: ${displayAddress}`);
 	formatElapsedTime(startTime);
-	logger.log(`-`);
-	logger.log(
+	console.log(`-`);
+	console.log(
 		`\u{1F527} Settings: ${chalk.cyan(selectedTokenA)}/${chalk.magenta(selectedTokenB)}\n\u{1F3AF} ${selectedTokenB} Target Value: $${infinityTarget}\n\u{1F6A8} Stop Loss at $${stopLossUSD}\n\u{2B65} Spread: ${spread}%\n\u{1F55A} Monitor Delay: ${monitorDelay}ms`
 	);
 	let displayPrice;
@@ -842,29 +842,29 @@ async function updateMainDisplay() {
 	if (currUsdTotalBalance < stopLossUSD) {
 		// Emergency Stop Loss
 		console.clear();
-		logger.log(
+		console.log(
 			`\n\u{1F6A8} Emergency Stop Loss Triggered! - Cashing out and Exiting`
 		);
 		stopLoss = true;
 		process.kill(process.pid, "SIGINT");
 	}
-	logger.log(`-
+	console.log(`-
 Starting Balance : $${initUsdTotalBalance.toFixed(2)}
 Current Balance  : $${currUsdTotalBalance.toFixed(2)}`);
 	const profitOrLoss = currUsdTotalBalance - initUsdTotalBalance;
 	const percentageChange = (profitOrLoss / initUsdTotalBalance) * 100;
 	if (profitOrLoss > 0) {
-		logger.log(
+		console.log(
 			`Profit : ${chalk.green(`+$${profitOrLoss.toFixed(2)} (+${percentageChange.toFixed(2)}%)`)}`
 		);
 	} else if (profitOrLoss < 0) {
-		logger.log(
+		console.log(
 			`Loss : ${chalk.red(`-$${Math.abs(profitOrLoss).toFixed(2)} (-${Math.abs(percentageChange).toFixed(2)}%)`)}`
 		);
 	} else {
-		logger.log(`Difference : $${profitOrLoss.toFixed(2)} (0.00%)`); // Neutral
+		console.log(`Difference : $${profitOrLoss.toFixed(2)} (0.00%)`); // Neutral
 	}
-	logger.log(`Market Change: ${(((newPrice - startPrice) / startPrice) * 100).toFixed(2)}%
+	console.log(`Market Change: ${(((newPrice - startPrice) / startPrice) * 100).toFixed(2)}%
 Performance Delta: ${(percentageChange - ((newPrice - startPrice) / startPrice) * 100).toFixed(2)}%
 -
 Latest Snapshot Balance ${chalk.cyan(selectedTokenA)}: ${chalk.cyan(currBalanceA.toFixed(5))} (Change: ${chalk.cyan((currBalanceA - initBalanceA).toFixed(5))})
@@ -950,14 +950,14 @@ async function jitoTipCheck() {
 			"https://jito-labs.metabaseapp.com/api/public/dashboard/016d4d60-e168-4a8f-93c7-4cd5ec6c7c8d/dashcard/154/card/188?parameters=%5B%5D"
 	  );
 	  if (!response.ok) {
-			logger.log('Fetch request failed, using default tip value of 0.00005 SOL');
+			console.log('Fetch request failed, using default tip value of 0.00005 SOL');
 			return 0.00005;
 	  }
 	  let json;
 	  try {
 			json = await response.json();
 	  } catch (err) {
-			logger.log('Invalid JSON response, using default tip value of 0.00005 SOL');
+			console.log('Invalid JSON response, using default tip value of 0.00005 SOL');
 			return 0.00005;
 	  }
 	  const row = json.data.rows[0];
@@ -989,7 +989,7 @@ async function jitoController(task) {
 		break;
 	default:
 		// unintended code
-		logger.log("Unknown Error state. Exiting...");
+		console.log("Unknown Error state. Exiting...");
 		process.exit(0);
 	}
 	jitoRetry = 1;
@@ -997,27 +997,27 @@ async function jitoController(task) {
 	while (jitoRetry < 20) {
 		switch (result) {
 		case "succeed":
-			logger.log("Operation Succeeded\n");
+			console.log("Operation Succeeded\n");
 
 			jitoRetry = 21;
 			break;
 		case "cancelFail":
-			logger.log("Retrying Cancel Orders...");
+			console.log("Retrying Cancel Orders...");
 			jitoRetry++;
 			result = await jitoCancelOrder(task);
 			break;
 		case "infinityFail":
-			logger.log("Retrying Infinity Orders...");
+			console.log("Retrying Infinity Orders...");
 			jitoRetry++;
 			result = await jitoSetInfinity(task);
 			break;
 		case "rebalanceFail":
-			logger.log("Retrying Rebalance Orders...");
+			console.log("Retrying Rebalance Orders...");
 			jitoRetry++;
 			result = await jitoRebalance(task);
 			break;
 		default:
-			logger.log("Unknown Error state. Exiting...");
+			console.log("Unknown Error state. Exiting...");
 			process.exit(0);
 		}
 	}
@@ -1026,13 +1026,13 @@ async function jitoController(task) {
 async function jitoCancelOrder(task) {
 	await checkOpenOrders();
 	if (checkArray.length === 0) {
-		logger.log("No orders found to cancel.");
+		console.log("No orders found to cancel.");
 		return "succeed";
 	} else {
-		logger.log("Cancelling Orders");
+		console.log("Cancelling Orders");
 		const transaction1 = await cancelOrder(checkArray, payer);
 		if (transaction1 === "skip") {
-			logger.log("Skipping Cancel...");
+			console.log("Skipping Cancel...");
 			return "succeed";
 		}
 		const result = await handleJitoBundle(task, transaction1);
@@ -1048,7 +1048,7 @@ async function jitoSetInfinity(task) {
 	await checkOpenOrders();
 
 	if (checkArray.length === 0) {
-		logger.log("No orders found to cancel.");
+		console.log("No orders found to cancel.");
 		const order1 = await createTx(
 			infinityBuyInputLamports,
 			infinityBuyOutputLamports,
@@ -1069,7 +1069,7 @@ async function jitoSetInfinity(task) {
 		const result = await handleJitoBundle(task, ...transactions);
 		return result;
 	} else {
-		logger.log("Found Orders to Cancel");
+		console.log("Found Orders to Cancel");
 		const transaction1 = await cancelOrder(checkArray, payer);
 		const order1 = await createTx(
 			infinityBuyInputLamports,
@@ -1096,7 +1096,7 @@ async function jitoSetInfinity(task) {
 async function jitoRebalance(task) {
 	const transaction1 = await balanceCheck();
 	if (transaction1 === "skip") {
-		logger.log("Skipping Rebalance...");
+		console.log("Skipping Rebalance...");
 		return "succeed";
 	}
 	const result = await handleJitoBundle(task, transaction1);
@@ -1126,8 +1126,8 @@ async function handleJitoBundle(task, ...transactions) {
 			toPubkey: tipAccount,
 			lamports: limitedTipValueInLamports
 		});
-		// logger.log("Tries: ",retries);
-		logger.log(
+		// console.log("Tries: ",retries);
+		console.log(
 			"Jito Fee:",
 			limitedTipValueInLamports / Math.pow(10, 9),
 			"SOL"
@@ -1170,8 +1170,8 @@ async function sendJitoBundle(task, bundletoSend) {
 	);
 	await checkOpenOrders();
 	const preBundleOrders = checkArray;
-	// logger.log(`PreJitoA: ${preJitoA}`);
-	// logger.log(`PreJitoB: ${preJitoB}`);
+	// console.log(`PreJitoA: ${preJitoA}`);
+	// console.log(`PreJitoB: ${preJitoB}`);
 
 	const data = {
 		jsonrpc: "2.0",
@@ -1215,9 +1215,9 @@ async function sendJitoBundle(task, bundletoSend) {
 
 	const result = responseData.result;
 	const url = `https://explorer.jito.wtf/bundle/${result}`;
-	logger.log(`\nResult ID: ${url}`);
+	console.log(`\nResult ID: ${url}`);
 	// spinner.stop();
-	logger.log("Checking for 30 seconds...");
+	console.log("Checking for 30 seconds...");
 	let jitoChecks = 1;
 	const maxChecks = 30;
 	let spinner;
@@ -1226,7 +1226,7 @@ async function sendJitoBundle(task, bundletoSend) {
 		spinner = ora(
 			`Checking Jito Bundle Status... ${jitoChecks}/${maxChecks}`
 		).start();
-		logger.log("\nTask: ", task);
+		console.log("\nTask: ", task);
 		try {
 			const { balanceA: postJitoA, balanceB: postJitoB } = await getBalance(
 				payer,
@@ -1238,7 +1238,7 @@ async function sendJitoBundle(task, bundletoSend) {
 			if (postJitoA !== preJitoA || postJitoB !== preJitoB) {
 				bundleLanded = true;
 				spinner.stop();
-				logger.log(
+				console.log(
 					"\nBundle Landed, waiting 30 seconds for orders to finalize..."
 				);
 				if (task !== "rebalance") {
@@ -1248,14 +1248,14 @@ async function sendJitoBundle(task, bundletoSend) {
 						await checkOpenOrders();
 						postBundleOrders = checkArray;
 						if (postBundleOrders !== preBundleOrders) {
-							logger.log(
+							console.log(
 								"\nBundle Landed, Orders Updated, Skipping Timer"
 							);
 							await delay(1000);
 							jitoChecks = 31;
 							break;
 						} else {
-							logger.log(
+							console.log(
 								`Checking Orders for ${bundleChecks} of 30 seconds`
 							);
 							await delay(1000);
@@ -1282,31 +1282,31 @@ async function sendJitoBundle(task, bundletoSend) {
 	switch (task) {
 	case "cancel":
 		if (checkArray.length > 0) {
-			logger.log("Cancelling Orders Failed, Retrying...");
+			console.log("Cancelling Orders Failed, Retrying...");
 			return "cancelFail";
 		} else {
-			logger.log("Orders Cancelled Successfully");
+			console.log("Orders Cancelled Successfully");
 			return "succeed";
 		}
 	case "infinity":
 		if (checkArray.length !== 2) {
-			logger.log("Placing Infinity Orders Failed, Retrying...");
+			console.log("Placing Infinity Orders Failed, Retrying...");
 			return "infinityFail";
 		} else {
-			logger.log("Infinity Orders Placed Successfully");
+			console.log("Infinity Orders Placed Successfully");
 			return "succeed";
 		}
 	case "rebalance":
 		// We dont need to check open orders here
 		if (bundleLanded) {
-			logger.log("Rebalancing Tokens Successful");
+			console.log("Rebalancing Tokens Successful");
 			return "succeed";
 		} else {
-			logger.log("Rebalancing Tokens Failed, Retrying...");
+			console.log("Rebalancing Tokens Failed, Retrying...");
 			return "rebalanceFail";
 		}
 	default:
-		logger.log("Unknown state, retrying...");
+		console.log("Unknown state, retrying...");
 		return "unknown";
 	}
 }
@@ -1320,7 +1320,7 @@ async function rebalanceTokens(
 ) {
 	if (shutDown) return;
 	const rebalanceLamports = Math.floor(rebalanceValue);
-	logger.log(`Rebalancing Tokens ${chalk.cyan(selectedTokenA)} and ${chalk.magenta(selectedTokenB)}`);
+	console.log(`Rebalancing Tokens ${chalk.cyan(selectedTokenA)} and ${chalk.magenta(selectedTokenB)}`);
 
 	try {
 		// Fetch the quote
@@ -1384,10 +1384,10 @@ async function cancelOrder(target, payer) {
 	const retryCount = 10;
 	for (let i = 0; i < retryCount; i++) {
 		if (target.length === 0) {
-			logger.log("No orders to cancel.");
+			console.log("No orders to cancel.");
 			return "skip";
 		}
-		logger.log(target);
+		console.log(target);
     	const requestData = {
 			owner: payer.publicKey.toString(),
 			feePayer: payer.publicKey.toString(),
@@ -1403,7 +1403,7 @@ async function cancelOrder(target, payer) {
 			});
 
 			if (!response.ok) {
-				logger.log("Bad Cancel Order Request");
+				console.log("Bad Cancel Order Request");
 				throw new Error(`HTTP error! Status: ${response.status}`);
 			}
 
@@ -1418,7 +1418,7 @@ async function cancelOrder(target, payer) {
 			return transaction;
 		} catch (error) {
 			if (i === retryCount - 1) throw error; // If last retry, throw error
-			logger.log(`Attempt ${i + 1} failed. Retrying...`);
+			console.log(`Attempt ${i + 1} failed. Retrying...`);
 
 			target = await checkOpenOrders();
 		}
@@ -1426,7 +1426,7 @@ async function cancelOrder(target, payer) {
 }
 
 async function balanceCheck() {
-	logger.log("Checking Portfolio, we will rebalance if necessary.");
+	console.log("Checking Portfolio, we will rebalance if necessary.");
 	const currentBalances = await getBalance(
 	  payer,
 	  selectedAddressA,
@@ -1444,7 +1444,7 @@ async function balanceCheck() {
 	tokenBRebalanceValue = currentBalances.tokenBRebalanceValue;
 
 	if (currUsdTotalBalance < infinityTarget) {
-	  logger.log(
+	  console.log(
 			`Your total balance is not high enough for your Infinity Target. Please either increase your wallet balance or reduce your target.`
 	  );
 	  process.exit(0);
@@ -1470,7 +1470,7 @@ async function balanceCheck() {
 			);
 	  }
 	} else {
-	  logger.log("Token B $ value within 3% of target, skipping rebalance.");
+	  console.log("Token B $ value within 3% of target, skipping rebalance.");
 	  return "skip";
 	}
 	const rebalanceSlippageBPS = 200;
@@ -1481,7 +1481,7 @@ async function balanceCheck() {
 		}
 		const answer = await questionAsync('Do you want to proceed with this transaction? (Y/n) ');
 		if (answer.toUpperCase() === 'N') {
-		  logger.log('Transaction cancelled by user. Closing program.');
+		  console.log('Transaction cancelled by user. Closing program.');
 		  process.exit(0);
 		} else {
 			askForRebalance = false;
@@ -1490,7 +1490,7 @@ async function balanceCheck() {
 	  };
 
 	if (adjustmentA > 0) {
-	  logger.log(
+	  console.log(
 			`Need to trade ${chalk.cyan(adjustmentA / Math.pow(10, selectedDecimalsA))} ${chalk.cyan(selectedTokenA)} to ${chalk.magenta(selectedTokenB)} to balance.`
 	  );
 	  const userConfirmation = await confirmTransaction();
@@ -1504,10 +1504,10 @@ async function balanceCheck() {
 			);
 			return rebalanceTx;
 	  } else {
-			logger.log('Transaction cancelled by user.');
+			console.log('Transaction cancelled by user.');
 	  }
 	} else if (adjustmentB > 0) {
-	  logger.log(
+	  console.log(
 			`Need to trade ${chalk.magenta(adjustmentB / Math.pow(10, selectedDecimalsB))} ${chalk.magenta(selectedTokenB)} to ${chalk.cyan(selectedTokenA)} to balance.`
 	  );
 	  const userConfirmation = await confirmTransaction();
@@ -1521,13 +1521,13 @@ async function balanceCheck() {
 			);
 			return rebalanceTx;
 	  } else {
-			logger.log('Transaction cancelled by user.');
+			console.log('Transaction cancelled by user.');
 	  }
 	}
 }
 
 process.on("SIGINT", () => {
-	logger.log("\nCTRL+C detected! Performing cleanup...");
+	console.log("\nCTRL+C detected! Performing cleanup...");
 	shutDown = true;
 	(async () => {
 		await jitoController("cancel");
