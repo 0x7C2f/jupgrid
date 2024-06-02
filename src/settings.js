@@ -2,7 +2,7 @@ import bs58 from 'bs58';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import promptSync from 'prompt-sync';
-
+import logger from './logger.js';
 import { Keypair } from '@solana/web3.js';
 
 import { initialize } from './jupgrid.js';
@@ -12,18 +12,21 @@ const prompt = promptSync({ sigint: true });
 
 function envload() {
 	const envFilePath = ".env";
-	const defaultEnvContent =
-		"RPC_URL=Your_RPC_Here\nPRIVATE_KEY=Your_Private_Key_Here";
+	const defaultEnvContent = 
+		"RPC_URL=Your_RPC_Here\n" +
+		"PRIVATE_KEY=Your_Private_Key_Here\n" +
+		"#TELEGRAM_BOT_TOKEN=Your_Telegram_Bot_Token_Here\n" +
+		"#TELEGRAM_USER_ID=Your_Telegram_User_ID_Here";
 	const encflag = "love_from_the_jupgrid_devs_<3";
 	try {
 		if (!fs.existsSync(envFilePath)) {
 			fs.writeFileSync(envFilePath, defaultEnvContent, "utf8");
-			console.log(
+			logger.log(
 				"\u{2714} .env file created. Please fill in your private information, and start JupGrid again."
 			);
 			process.exit(0);
 		}
-		console.log("\u{2714} Env Loaded Successfully.\n");
+		logger.log("\u{2714} Env Loaded Successfully.\n");
 	} catch (error) {
 		console.error(
 			"\u{274C} An error occurred while checking or creating the .env file:",
@@ -61,7 +64,9 @@ function envload() {
 							)
 						)
 					),
-					process.env.RPC_URL
+					process.env.RPC_URL,
+					process.env.TELEGRAM_BOT_TOKEN || null,
+					process.env.TELEGRAM_USER_ID || null
 				];
 			} catch (error) {
 				console.error(
@@ -79,17 +84,20 @@ function envload() {
 			const encryptedFlag = cryptr.encrypt(encflag, pswd);
 			fs.writeFileSync(
 				envFilePath,
-				`RPC_URL=${process.env.RPC_URL}\n//Do NOT touch these two - you risk breaking encryption!\nPRIVATE_KEY=${encryptedKey}\nFLAG=${encryptedFlag}`,
+				`RPC_URL=${process.env.RPC_URL}\n` +
+				`//Do NOT touch these two - you risk breaking encryption!\n` +
+				`PRIVATE_KEY=${encryptedKey}\nFLAG=${encryptedFlag}\n` +
+				(process.env.TELEGRAM_BOT_TOKEN ? `TELEGRAM_BOT_TOKEN=${process.env.TELEGRAM_BOT_TOKEN}\n` : '') +
+				(process.env.TELEGRAM_USER_ID ? `TELEGRAM_USER_ID=${process.env.TELEGRAM_USER_ID}\n` : ''),
 				"utf8"
 			);
-			console.log(
+			logger.log(
 				"\u{1F512} Encrypted private key and flag saved to .env file. Please restart JupGrid to continue."
 			);
 			process.exit(0);
 		}
 	} // end while
 }
-
 function saveuserSettings(
 	selectedTokenA,
 	selectedAddressA,
@@ -122,7 +130,7 @@ function saveuserSettings(
 				4
 			)
 		);
-		console.log("\u{2714} User data saved successfully.");
+		logger.log("\u{2714} User data saved successfully.");
 	} catch (error) {
 		console.error("Error saving user data:", error);
 	}
@@ -134,7 +142,7 @@ function loaduserSettings() {
 		const userSettings = JSON.parse(data);
 		return userSettings;
 	} catch (error) {
-		console.log("No user data found. Starting with fresh inputs.");
+		logger.log("No user data found. Starting with fresh inputs.");
 		initialize();
 	}
 }
