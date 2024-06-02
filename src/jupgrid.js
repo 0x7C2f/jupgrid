@@ -685,7 +685,7 @@ async function infinityGrid() {
     infinitySellOutput * Math.pow(10, selectedDecimalsA)
   );
 
-  console.log(`Current Market Price: ${priceResponse.toFixed(5)}
+  logger.log(`Current Market Price: ${priceResponse.toFixed(5)}
 	Infinity Target: ${infinityTarget}
 	Current ${selectedTokenB} Balance: ${
     currentBalances.balanceB
