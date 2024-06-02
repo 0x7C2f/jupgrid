@@ -6,18 +6,24 @@ dotenv.config();
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_USER_ID;
 
+// Create a bot instance
+const bot = new TelegramBot(token);
+
 const logger = {
-  log: function(message) {
-    console.log(message); // Log to console
+  info: function(message) {
+    console.log(`[INFO] ${message}`); // Log info message to console
 
     // Check if Telegram bot token and chat ID are configured
     if (token && chatId) {
-      // Create a bot instance
-      const bot = new TelegramBot(token);
-
       // Send message to Telegram
-      bot.sendMessage(chatId, message)
+      bot.sendMessage(chatId, `[INFO] ${message}`)
         .catch((error) => console.error("Error sending message to Telegram:", error));
+    }
+  },
+
+  debug: function(message) {
+    if (process.env.DEBUG === 'true') {
+      console.log(`[DEBUG] ${message}`); // Log debug message to console
     }
   }
 };
