@@ -54,7 +54,6 @@ function envload() {
 					);
 					continue;
 				}
-
 				return [
 					Keypair.fromSecretKey(
 						new Uint8Array(
@@ -71,7 +70,6 @@ function envload() {
 				console.error(
 					"\u{274C} Invalid password. Please ensure you are using the correct password."
 				);
-				console.error("\u{274C} An error occurred:", error);
 				continue;
 			}
 		} else {
