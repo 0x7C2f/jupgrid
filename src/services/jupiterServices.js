@@ -28,4 +28,9 @@ async function getTokenAccounts(connection, address, tokenMintAddress) {
     });
 }
 
+async function fetchPrice() {
+    const response = await axios.get("https://price.jup.ag/v6/price?ids=SOL");
+    const price = response.data.data.SOL.price;
+    return parseFloat(price.toFixed(2));
+}
 export { downloadTokensList, getTokens, getTokenAccounts };

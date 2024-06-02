@@ -1,5 +1,10 @@
 // #region imports
 import { downloadTokensList, getTokens, getTokenAccounts } from './services/jupiterServices.js';
+import { logger } from './utils/logger.js';
+import { LimitOrderProvider, ownerFilter } from "@jup-ag/limit-order-sdk";
+import { program } from "@project-serum/anchor/dist/cjs/native/system.js";
+import { envload, loaduserSettings, saveuserSettings } from "./settings.js";
+import { delay, questionAsync, rl} from "./utils/utils.js";
 
 import axios from "axios";
 import bs58 from "bs58";
@@ -7,9 +12,7 @@ import chalk from "chalk";
 import fetch from "cross-fetch";
 import * as fs from "fs";
 import ora from "ora";
-import logger from './utils/logger.js';
-import { LimitOrderProvider, ownerFilter } from "@jup-ag/limit-order-sdk";
-import { program } from "@project-serum/anchor/dist/cjs/native/system.js";
+
 import * as solanaWeb3 from "@solana/web3.js";
 import {
   Connection,
@@ -20,12 +23,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 
-import { envload, loaduserSettings, saveuserSettings } from "./settings.js";
-import {
-  delay,
-  questionAsync,
-  rl,
-} from "./utils/utils.js";
+
 
 // #endregion
 // #region constants
@@ -619,11 +617,6 @@ function formatElapsedTime(startTime) {
   console.log(`\u{23F1}  Run time: ${hours}:${minutes}:${seconds}`);
 }
 
-async function fetchPrice() {
-  const response = await axios.get("https://price.jup.ag/v6/price?ids=SOL");
-  const price = response.data.data.SOL.price;
-  return parseFloat(price.toFixed(2));
-}
 
 async function infinityGrid() {
   if (shutDown) return;
