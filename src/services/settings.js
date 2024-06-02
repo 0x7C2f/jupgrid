@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import promptSync from 'prompt-sync';
 import { Keypair } from '@solana/web3.js';
-import { Encrypter } from './utils/encryptor.js'
-import { initialize } from './jupgrid.js';
+import { Encrypter } from '../utils/encryptor.js'
+import { initialize } from '../jupgrid.js';
 
 const prompt = promptSync({ sigint: true });
 
@@ -109,7 +109,7 @@ function saveuserSettings(
 ) {
 	try {
 		fs.writeFileSync(
-			"userSettings.json",
+			"../userSettings.json",
 			JSON.stringify(
 				{
 					selectedTokenA,

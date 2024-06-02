@@ -3,7 +3,7 @@ import { downloadTokensList, getTokens, getTokenAccounts } from './services/jupi
 import { logger } from './utils/logger.js';
 import { LimitOrderProvider, ownerFilter } from "@jup-ag/limit-order-sdk";
 import { program } from "@project-serum/anchor/dist/cjs/native/system.js";
-import { envload, loaduserSettings, saveuserSettings } from "./settings.js";
+import { envload, loaduserSettings, saveuserSettings } from "./services/settings.js";
 import { delay, questionAsync, rl} from "./utils/utils.js";
 
 import * as solanaWeb3 from "@solana/web3.js";
@@ -15,21 +15,14 @@ import bs58 from "bs58";
 import chalk from "chalk";
 import fetch from "cross-fetch";
 import ora from "ora";
-
-
-
-
 // #endregion
+
 // #region constants
 // use fs to to read version from package.json
 const packageInfo = JSON.parse(fs.readFileSync("package.json", "utf8"));
-
 const version = packageInfo.version;
-
 const [MIN_WAIT, MAX_WAIT] = [5e2, 5e3];
-
 const [payer, rpcUrl, token, userid] = envload();
-
 const connection = new solanaWeb3.Connection(rpcUrl, "processed", {
   confirmTransactionInitialTimeout: 5000,
 });
