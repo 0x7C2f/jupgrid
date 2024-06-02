@@ -1059,7 +1059,7 @@ async function jitoCancelOrder(task) {
     console.log("No orders found to cancel.");
     return "succeed";
   } else {
-    console.log("Cancelling Orders");
+    logger.log("Cancelling Orders");
     const transaction1 = await cancelOrder(checkArray, payer);
     if (transaction1 === "skip") {
       console.log("Skipping Cancel...");
