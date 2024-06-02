@@ -1027,22 +1027,22 @@ async function jitoController(task) {
   while (jitoRetry < 20) {
     switch (result) {
       case "succeed":
-        console.log("Operation Succeeded\n");
+        console.log("\u{1F7E2} Operation Succeeded\n");
 
         jitoRetry = 21;
         break;
       case "cancelFail":
-        console.log("Retrying Cancel Orders...");
+        console.log("\u{231B} Retrying Cancel Orders...");
         jitoRetry++;
         result = await jitoCancelOrder(task);
         break;
       case "infinityFail":
-        console.log("Retrying Infinity Orders...");
+        console.log("\u{231B} Retrying Infinity Orders...");
         jitoRetry++;
         result = await jitoSetInfinity(task);
         break;
       case "rebalanceFail":
-        console.log("Retrying Rebalance Orders...");
+        console.log("\u{231B} Retrying Rebalance Orders...");
         jitoRetry++;
         result = await jitoRebalance(task);
         break;
