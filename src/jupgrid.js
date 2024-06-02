@@ -1,5 +1,5 @@
 // #region imports
-import { downloadTokensList, getTokens, getTokenAccounts } from './services/jupiterServices.js';
+import { downloadTokensList, getTokens, getTokenAccounts } from './api/jupiter.js';
 import { logger } from './utils/logger.js';
 import { LimitOrderProvider, ownerFilter } from "@jup-ag/limit-order-sdk";
 import { program } from "@project-serum/anchor/dist/cjs/native/system.js";
