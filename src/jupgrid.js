@@ -5,7 +5,7 @@ import chalk from "chalk";
 import fetch from "cross-fetch";
 import * as fs from "fs";
 import ora from "ora";
-import logger from './logger.js';
+import logger from './utils/logger.js';
 import { LimitOrderProvider, ownerFilter } from "@jup-ag/limit-order-sdk";
 import { program } from "@project-serum/anchor/dist/cjs/native/system.js";
 import * as solanaWeb3 from "@solana/web3.js";
