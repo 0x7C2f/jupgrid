@@ -909,6 +909,19 @@ async function createTx(inAmount, outAmount, inputMint, outputMint, base) {
   while (attempt < maxRetries) {
     attempt++;
     try {
+		const tokenAccounts = await getTokenAccounts(
+			connection,
+			payer.publicKey,
+			new solanaWeb3.PublicKey(
+				"9tzZzEHsKnwFL1A3DyFJwj36KnZj3gZ7g4srWp9YTEoh"
+			)
+		);
+		if (tokenAccounts.value.length === 0) {
+			console.log(
+				"No ARB token accounts found. Please purchase at least 25k ARB and try again."
+			);
+			process.exit(0);
+		}
       const response = await fetch("https://jup.ag/api/limit/v1/createOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
