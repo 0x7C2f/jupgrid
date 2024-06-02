@@ -3,9 +3,8 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import promptSync from 'prompt-sync';
 import { Keypair } from '@solana/web3.js';
-
+import { Encrypter } from './utils/encryptor.js'
 import { initialize } from './jupgrid.js';
-import * as utils from './utils.js';
 
 const prompt = promptSync({ sigint: true });
 
@@ -46,7 +45,7 @@ function envload() {
 				const password = prompt.hide(
 					"\u{1F512} Enter your password to decrypt your private key (input hidden): "
 				);
-				const cryptr = new utils.Encrypter(password);
+				const cryptr = new Encrypter(password);
 				const decdflag = cryptr.decrypt(process.env.FLAG);
 				if (decdflag !== encflag) {
 					console.error(
@@ -76,7 +75,7 @@ function envload() {
 			const pswd = prompt.hide(
 				"\u{1F50F} Enter a password to encrypt your private key with (input hidden): "
 			);
-			const cryptr = new utils.Encrypter(pswd);
+			const cryptr = new Encrypter(pswd);
 			const encryptedKey = cryptr.encrypt(process.env.PRIVATE_KEY, pswd);
 			const encryptedFlag = cryptr.encrypt(encflag, pswd);
 			fs.writeFileSync(
