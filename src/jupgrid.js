@@ -6,22 +6,16 @@ import { program } from "@project-serum/anchor/dist/cjs/native/system.js";
 import { envload, loaduserSettings, saveuserSettings } from "./settings.js";
 import { delay, questionAsync, rl} from "./utils/utils.js";
 
+import * as solanaWeb3 from "@solana/web3.js";
+import * as fs from "fs";
+
+
 import axios from "axios";
 import bs58 from "bs58";
 import chalk from "chalk";
 import fetch from "cross-fetch";
-import * as fs from "fs";
 import ora from "ora";
 
-import * as solanaWeb3 from "@solana/web3.js";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  TransactionMessage,
-  VersionedTransaction,
-} from "@solana/web3.js";
 
 
 
@@ -36,7 +30,7 @@ const [MIN_WAIT, MAX_WAIT] = [5e2, 5e3];
 
 const [payer, rpcUrl, token, userid] = envload();
 
-const connection = new Connection(rpcUrl, "processed", {
+const connection = new solanaWeb3.Connection(rpcUrl, "processed", {
   confirmTransactionInitialTimeout: 5000,
 });
 const limitOrder = new LimitOrderProvider(connection);
@@ -1064,8 +1058,8 @@ async function jitoCancelOrder(task) {
 
 async function jitoSetInfinity(task) {
   // cancel any existing, place 2 new
-  const base1 = Keypair.generate();
-  const base2 = Keypair.generate();
+  const base1 = solanaWeb3.Keypair.generate();
+  const base2 = solanaWeb3.Keypair.generate();
 
   await checkOpenOrders();
 
@@ -1141,9 +1135,9 @@ async function handleJitoBundle(task, ...transactions) {
     roundedTipValueInLamports.toFixed(9)
   );
   try {
-    const tipAccount = new PublicKey(getRandomTipAccount());
+    const tipAccount = new solanaWeb3.PublicKey(getRandomTipAccount());
     const instructionsSub = [];
-    const tipIxn = SystemProgram.transfer({
+    const tipIxn = solanaWeb3.SystemProgram.transfer({
       fromPubkey: payer.publicKey,
       toPubkey: tipAccount,
       lamports: limitedTipValueInLamports,
@@ -1157,13 +1151,13 @@ async function handleJitoBundle(task, ...transactions) {
     instructionsSub.push(tipIxn);
     const resp = await connection.getLatestBlockhash("confirmed");
 
-    const messageSub = new TransactionMessage({
+    const messageSub = new solanaWeb3.TransactionMessage({
       payerKey: payer.publicKey,
       recentBlockhash: resp.blockhash,
       instructions: instructionsSub,
     }).compileToV0Message();
 
-    const txSub = new VersionedTransaction(messageSub);
+    const txSub = new solanaWeb3.VersionedTransaction(messageSub);
     txSub.sign([payer]);
     const bundletoSend = [...transactions, txSub];
 
@@ -1372,7 +1366,7 @@ async function rebalanceTokens(
       swapData.swapTransaction,
       "base64"
     );
-    const transaction = VersionedTransaction.deserialize(swapTransactionBuffer);
+    const transaction = solanaWeb3.VersionedTransaction.deserialize(swapTransactionBuffer);
 
     transaction.recentBlockhash = blockhash;
     transaction.sign([payer]);

@@ -19,8 +19,4 @@ function questionAsync(question) {
 	});
 }
 
-export {
-	delay,
-	questionAsync,
-	rl
-};
+export { delay, questionAsync, rl };
