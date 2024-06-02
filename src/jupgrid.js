@@ -685,7 +685,7 @@ async function infinityGrid() {
     infinitySellOutput * Math.pow(10, selectedDecimalsA)
   );
 
-  logger.log(`Current Market Price: ${priceResponse.toFixed(5)}
+  console.log(`Current Market Price: ${priceResponse.toFixed(5)}
 	Infinity Target: ${infinityTarget}
 	Current ${selectedTokenB} Balance: ${
     currentBalances.balanceB
@@ -715,7 +715,7 @@ async function infinityGrid() {
     infinityBuyInput * Math.pow(10, selectedDecimalsA)
   );
 
-  logger.log(`\n${selectedTokenB} down ${spread}%: ${newPriceBDown.toFixed(5)}
+  console.log(`\n${selectedTokenB} down ${spread}%: ${newPriceBDown.toFixed(5)}
 	Amount of ${selectedTokenB} to send: ${infinityBuyOutput.toFixed(
     5
   )} (${infinityBuyOutputLamports} lamports)
@@ -1306,27 +1306,27 @@ async function sendJitoBundle(task, bundletoSend) {
   switch (task) {
     case "cancel":
       if (checkArray.length > 0) {
-        console.log("Cancelling Orders Failed, Retrying...");
+        logger.log("Cancelling Orders Failed, Retrying...");
         return "cancelFail";
       } else {
-        console.log("Orders Cancelled Successfully");
+        logger.log("Orders Cancelled Successfully");
         return "succeed";
       }
     case "infinity":
       if (checkArray.length !== 2) {
-        console.log("Placing Infinity Orders Failed, Retrying...");
+        logger.log("Placing Infinity Orders Failed, Retrying...");
         return "infinityFail";
       } else {
-        console.log("Infinity Orders Placed Successfully");
+        logger.log("Infinity Orders Placed Successfully");
         return "succeed";
       }
     case "rebalance":
       // We dont need to check open orders here
       if (bundleLanded) {
-        console.log("Rebalancing Tokens Successful");
+        logger.log("Rebalancing Tokens Successful");
         return "succeed";
       } else {
-        console.log("Rebalancing Tokens Failed, Retrying...");
+        logger.log("Rebalancing Tokens Failed, Retrying...");
         return "rebalanceFail";
       }
     default:
