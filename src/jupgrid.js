@@ -1,4 +1,6 @@
 // #region imports
+import { downloadTokensList, getTokens, getTokenAccounts } from './services/jupiterServices.js';
+
 import axios from "axios";
 import bs58 from "bs58";
 import chalk from "chalk";
@@ -21,12 +23,9 @@ import {
 import { envload, loaduserSettings, saveuserSettings } from "./settings.js";
 import {
   delay,
-  downloadTokensList,
-  getTokenAccounts,
-  getTokens,
   questionAsync,
   rl,
-} from "./utils.js";
+} from "./utils/utils.js";
 
 // #endregion
 // #region constants
