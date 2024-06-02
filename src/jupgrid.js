@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import fetch from 'cross-fetch';
 import * as fs from 'fs';
 import ora from 'ora';
-import logger from './logger.js';
 
 import {
 	LimitOrderProvider,

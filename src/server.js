@@ -1,5 +1,4 @@
 import express from "express";
-import logger from './logger.js';
 
 class APIServer {
 	constructor(tradelogger) {
@@ -15,7 +14,7 @@ class APIServer {
 
 	start() {
 		this.app.listen(3333, () => {
-			logger.log("API Server listening on port 3333");
+			console.log("API Server listening on port 3333");
 		});
 	}
 }

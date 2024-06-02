@@ -2,7 +2,6 @@ import bs58 from 'bs58';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import promptSync from 'prompt-sync';
-import logger from './logger.js';
 import { Keypair } from '@solana/web3.js';
 
 import { initialize } from './jupgrid.js';
@@ -21,12 +20,12 @@ function envload() {
 	try {
 		if (!fs.existsSync(envFilePath)) {
 			fs.writeFileSync(envFilePath, defaultEnvContent, "utf8");
-			logger.info(
+			console.log(
 				"\u{2714} .env file created. Please fill in your private information, and start JupGrid again."
 			);
 			process.exit(0);
 		}
-		logger.info("\u{2714} Env Loaded Successfully.\n");
+		console.log("\u{2714} Env Loaded Successfully.\n");
 	} catch (error) {
 		console.error(
 			"\u{274C} An error occurred while checking or creating the .env file:",
@@ -91,7 +90,7 @@ function envload() {
 				(process.env.TELEGRAM_USER_ID ? `TELEGRAM_USER_ID=${process.env.TELEGRAM_USER_ID}\n` : ''),
 				"utf8"
 			);
-			logger.info(
+			console.log(
 				"\u{1F512} Encrypted private key and flag saved to .env file. Please restart JupGrid to continue."
 			);
 			process.exit(0);
@@ -131,7 +130,7 @@ function saveuserSettings(
 				4
 			)
 		);
-		logger.info("\u{2714} User data saved successfully.");
+		console.log("\u{2714} User data saved successfully.");
 	} catch (error) {
 		console.error("Error saving user data:", error);
 	}
@@ -143,7 +142,7 @@ function loaduserSettings() {
 		const userSettings = JSON.parse(data);
 		return userSettings;
 	} catch (error) {
-		logger.info("No user data found. Starting with fresh inputs.");
+		console.log("No user data found. Starting with fresh inputs.");
 		initialize();
 	}
 }
