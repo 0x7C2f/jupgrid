@@ -1289,18 +1289,14 @@ async function rebalanceTokens(
   quoteurl
 ) {
   if (shutDown) return;
+
   const rebalanceLamports = Math.floor(rebalanceValue);
-  console.log(
-    `Rebalancing Tokens ${chalk.cyan(selectedTokenA)} and ${chalk.magenta(
-      selectedTokenB
-    )}`
-  );
+
+  console.log(`Rebalancing Tokens ${chalk.cyan(selectedTokenA)} and ${chalk.magenta(selectedTokenB)}`);
 
   try {
     // Fetch the quote
-    const quoteResponse = await axios.get(
-      `${quoteurl}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${rebalanceLamports}&slippageBps=${rebalanceSlippageBPS}`
-    );
+    const quoteResponse = await axios.get(`${quoteurl}?inputMint=${inputMint}&outputMint=${outputMint}&amount=${rebalanceLamports}&slippageBps=${rebalanceSlippageBPS}`);
 
     const swapApiResponse = await fetch("https://quote-api.jup.ag/v6/swap", {
       method: "POST",
@@ -1322,10 +1318,7 @@ async function rebalanceTokens(
     }
 
     // Deserialize the transaction correctly for a versioned message
-    const swapTransactionBuffer = Buffer.from(
-      swapData.swapTransaction,
-      "base64"
-    );
+    const swapTransactionBuffer = Buffer.from(swapData.swapTransaction, "base64");
     const transaction = solanaWeb3.VersionedTransaction.deserialize(swapTransactionBuffer);
 
     transaction.recentBlockhash = blockhash;
@@ -1333,36 +1326,41 @@ async function rebalanceTokens(
     return transaction;
   } catch (error) {
     console.error("Error during the transaction:", error);
+    return null; // Return null to indicate failure
   }
 }
 
+
 async function checkOpenOrders() {
-  openOrders = [];
-  checkArray = [];
+  try {
+    // Fetch open orders
+    const openOrdersResponse = await limitOrder.getOrders([ownerFilter(payer.publicKey, "processed")]);
 
-  // Make the JSON request
-  openOrders = await limitOrder.getOrders([
-    ownerFilter(payer.publicKey, "processed"),
-  ]);
-
-  // Create an array to hold publicKey values
-  checkArray = openOrders.map((order) => order.publicKey.toString());
+    // Extract public key values from open orders
+    checkArray = openOrdersResponse.map(order => order.publicKey.toString());
+  } catch (error) {
+    console.error("Error while checking open orders:", error);
+    checkArray = []; // Reset checkArray in case of error
+  }
 }
+
 
 async function cancelOrder(target, payer) {
   const retryCount = 10;
-  for (let i = 0; i < retryCount; i++) {
-    if (target.length === 0) {
-      console.log("No orders to cancel.");
-      return "skip";
-    }
-    console.log(target);
-    const requestData = {
-      owner: payer.publicKey.toString(),
-      feePayer: payer.publicKey.toString(),
-      orders: Array.from(target),
-    };
-    try {
+
+  try {
+    for (let i = 0; i < retryCount; i++) {
+      if (target.length === 0) {
+        console.log("No orders to cancel.");
+        return "skip";
+      }
+
+      const requestData = {
+        owner: payer.publicKey.toString(),
+        feePayer: payer.publicKey.toString(),
+        orders: Array.from(target),
+      };
+
       const response = await fetch("https://jup.ag/api/limit/v1/cancelOrders", {
         method: "POST",
         headers: {
@@ -1385,14 +1383,13 @@ async function cancelOrder(target, payer) {
       transaction.recentBlockhash = blockhash;
       transaction.sign(payer);
       return transaction;
-    } catch (error) {
-      if (i === retryCount - 1) throw error; // If last retry, throw error
-      console.log(`Attempt ${i + 1} failed. Retrying...`);
-
-      target = await checkOpenOrders();
     }
+  } catch (error) {
+    console.error("Error while canceling orders:", error);
+    throw error; // Rethrow the error for handling at a higher level
   }
 }
+
 
 async function balanceCheck() {
   console.log("Checking Portfolio, we will rebalance if necessary.");
