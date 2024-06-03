@@ -923,225 +923,220 @@ function encodeTransactionToBase58(transaction) {
 }
 
 async function jitoTipCheck() {
+  const defaultTip = 0.00005; // Default tip value
+  const apiUrl = "https://jito-labs.metabaseapp.com/api/public/dashboard/016d4d60-e168-4a8f-93c7-4cd5ec6c7c8d/dashcard/154/card/188?parameters=%5B%5D";
+
   try {
-    const response = await fetch(
-      "https://jito-labs.metabaseapp.com/api/public/dashboard/016d4d60-e168-4a8f-93c7-4cd5ec6c7c8d/dashcard/154/card/188?parameters=%5B%5D"
-    );
+    const response = await fetch(apiUrl);
+
     if (!response.ok) {
-      console.log(
-        "Fetch request failed, using default tip value of 0.00005 SOL"
-      );
-      return 0.00005;
+      console.log("Fetch request failed, using default tip value of 0.00005 SOL");
+      return defaultTip;
     }
-    let json;
-    try {
-      json = await response.json();
-    } catch (err) {
-      console.log(
-        "Invalid JSON response, using default tip value of 0.00005 SOL"
-      );
-      return 0.00005;
-    }
+
+    const json = await response.json();
     const row = json.data.rows[0];
-    const tipVal = Number(row[6].toFixed(8));
+    const tipVal = parseFloat(row[6].toFixed(8));
+
     if (isNaN(tipVal)) {
       console.error("Invalid tip value:", tipVal);
       throw new Error("Invalid tip value");
     }
+
     lastTip = tipVal;
     return tipVal;
   } catch (err) {
     console.error(err);
-    return lastTip !== null ? lastTip : 0.00005; // Return a default of 50000 lamports if the request fails
+    return lastTip !== null ? lastTip : defaultTip;
   }
 }
 
 async function jitoController(task) {
+  const MAX_RETRIES = 20;
   let result = "unknown";
-  // Initial operation
-  switch (task) {
-    case "cancel":
-      result = await jitoCancelOrder(task);
-      break;
-    case "infinity":
-      result = await jitoSetInfinity(task);
-      break;
-    case "rebalance":
-      result = await jitoRebalance(task);
-      break;
-    default:
-      // unintended code
-      console.log("Unknown Error state. Exiting...");
-      process.exit(0);
+
+  const operations = {
+    "cancel": jitoCancelOrder,
+    "infinity": jitoSetInfinity,
+    "rebalance": jitoRebalance
+  };
+
+  if (operations[task]) {
+    result = await operations[task](task);
+  } else {
+    console.log("Unknown task. Exiting...");
+    process.exit(0);
   }
-  jitoRetry = 1;
-  // Retry loop
-  while (jitoRetry < 20) {
+
+  for (let retryCount = 1; retryCount <= MAX_RETRIES; retryCount++) {
     switch (result) {
       case "succeed":
         console.log("\u{1F7E2} Operation Succeeded\n");
-
-        jitoRetry = 21;
-        break;
+        return; // Exit the function upon success
       case "cancelFail":
         console.log("\u{231B} Retrying Cancel Orders...");
-        jitoRetry++;
         result = await jitoCancelOrder(task);
         break;
       case "infinityFail":
         console.log("\u{231B} Retrying Infinity Orders...");
-        jitoRetry++;
         result = await jitoSetInfinity(task);
         break;
       case "rebalanceFail":
         console.log("\u{231B} Retrying Rebalance Orders...");
-        jitoRetry++;
         result = await jitoRebalance(task);
         break;
       default:
-        console.log("Unknown Error state. Exiting...");
+        console.log("Unknown error state. Exiting...");
         process.exit(0);
     }
   }
+
+  console.log("Max retries reached. Exiting...");
+  process.exit(1); // Exit with error if max retries are reached
 }
 
+
 async function jitoCancelOrder(task) {
-  await checkOpenOrders();
-  if (checkArray.length === 0) {
-    console.log("No orders found to cancel.");
-    return "succeed";
-  } else {
-    logger.log("Cancelling Orders");
+  try {
+    await checkOpenOrders();
+
+    if (checkArray.length === 0) {
+      console.log("No orders found to cancel.");
+      return "succeed";
+    }
+
+    console.log("Cancelling Orders");
     const transaction1 = await cancelOrder(checkArray, payer);
+
     if (transaction1 === "skip") {
       console.log("Skipping Cancel...");
       return "succeed";
     }
+
     const result = await handleJitoBundle(task, transaction1);
     return result;
+
+  } catch (error) {
+    console.error("Error during jitoCancelOrder:", error);
+    return "cancelFail";
   }
 }
+
 
 async function jitoSetInfinity(task) {
-  // cancel any existing, place 2 new
-  const base1 = solanaWeb3.Keypair.generate();
-  const base2 = solanaWeb3.Keypair.generate();
+  try {
+    const base1 = solanaWeb3.Keypair.generate();
+    const base2 = solanaWeb3.Keypair.generate();
 
-  await checkOpenOrders();
+    await checkOpenOrders();
 
-  if (checkArray.length === 0) {
-    console.log("No orders found to cancel.");
-    const order1 = await createTx(
-      infinityBuyInputLamports,
-      infinityBuyOutputLamports,
-      selectedAddressA,
-      selectedAddressB,
-      base1
-    );
-    const order2 = await createTx(
-      infinitySellInputLamports,
-      infinitySellOutputLamports,
-      selectedAddressB,
-      selectedAddressA,
-      base2
-    );
-    const transaction1 = order1.transaction;
-    const transaction2 = order2.transaction;
-    const transactions = [transaction1, transaction2];
+    const createOrders = async () => {
+      const order1 = await createTx(
+        infinityBuyInputLamports,
+        infinityBuyOutputLamports,
+        selectedAddressA,
+        selectedAddressB,
+        base1
+      );
+      const order2 = await createTx(
+        infinitySellInputLamports,
+        infinitySellOutputLamports,
+        selectedAddressB,
+        selectedAddressA,
+        base2
+      );
+      return [order1.transaction, order2.transaction];
+    };
+
+    let transactions = [];
+    if (checkArray.length === 0) {
+      console.log("No orders found to cancel.");
+      transactions = await createOrders();
+    } else {
+      console.log("Found Orders to Cancel");
+      const cancelTransaction = await cancelOrder(checkArray, payer);
+      transactions = [cancelTransaction, ...await createOrders()];
+    }
+
     const result = await handleJitoBundle(task, ...transactions);
     return result;
-  } else {
-    console.log("Found Orders to Cancel");
-    const transaction1 = await cancelOrder(checkArray, payer);
-    const order1 = await createTx(
-      infinityBuyInputLamports,
-      infinityBuyOutputLamports,
-      selectedAddressA,
-      selectedAddressB,
-      base1
-    );
-    const order2 = await createTx(
-      infinitySellInputLamports,
-      infinitySellOutputLamports,
-      selectedAddressB,
-      selectedAddressA,
-      base2
-    );
-    const transaction2 = order1.transaction;
-    const transaction3 = order2.transaction;
-    const transactions = [transaction1, transaction2, transaction3];
-    const result = await handleJitoBundle(task, ...transactions);
-    return result;
+
+  } catch (error) {
+    console.error("Error during jitoSetInfinity:", error);
+    return "infinityFail";
   }
 }
+
 
 async function jitoRebalance(task) {
-  const transaction1 = await balanceCheck();
-  if (transaction1 === "skip") {
-    console.log("Skipping Rebalance...");
-    return "succeed";
+  try {
+    const transaction1 = await balanceCheck();
+
+    if (transaction1 === "skip") {
+      console.log("Skipping Rebalance...");
+      return "succeed";
+    }
+
+    const result = await handleJitoBundle(task, transaction1);
+    return result;
+
+  } catch (error) {
+    console.error("Error during jitoRebalance:", error);
+    return "rebalanceFail";
   }
-  const result = await handleJitoBundle(task, transaction1);
-  return result;
 }
+
 
 async function handleJitoBundle(task, ...transactions) {
   let tipValueInSol;
+
   try {
     tipValueInSol = await jitoTipCheck();
   } catch (err) {
-    console.error(err);
-    tipValueInSol = 0.00005; // Replace 0 with your default value
+    console.error("Error during jitoTipCheck:", err);
+    tipValueInSol = 0.00005; // Default value
   }
-  const tipValueInLamports = tipValueInSol * 1_000_000_000;
-  const roundedTipValueInLamports = Math.round(tipValueInLamports);
 
-  // Limit to 9 digits
-  const limitedTipValueInLamports = Number(
-    roundedTipValueInLamports.toFixed(9)
-  );
+  const tipValueInLamports = Math.round(tipValueInSol * 1_000_000_000);
+
   try {
     const tipAccount = new solanaWeb3.PublicKey(getRandomTipAccount());
-    const instructionsSub = [];
     const tipIxn = solanaWeb3.SystemProgram.transfer({
       fromPubkey: payer.publicKey,
       toPubkey: tipAccount,
-      lamports: limitedTipValueInLamports,
+      lamports: tipValueInLamports,
     });
-    // console.log("Tries: ",retries);
-    console.log(
-      "Jito Fee:",
-      limitedTipValueInLamports / Math.pow(10, 9),
-      "SOL"
-    );
-    instructionsSub.push(tipIxn);
+
+    console.log("Jito Fee:", tipValueInLamports / 1_000_000_000, "SOL");
+
     const resp = await connection.getLatestBlockhash("confirmed");
 
     const messageSub = new solanaWeb3.TransactionMessage({
       payerKey: payer.publicKey,
       recentBlockhash: resp.blockhash,
-      instructions: instructionsSub,
+      instructions: [tipIxn],
     }).compileToV0Message();
 
     const txSub = new solanaWeb3.VersionedTransaction(messageSub);
     txSub.sign([payer]);
-    const bundletoSend = [...transactions, txSub];
 
-    // Ensure that bundletoSend is not empty
-    if (bundletoSend.length === 0) {
+    const bundleToSend = [...transactions, txSub];
+
+    if (bundleToSend.length === 0) {
       throw new Error("Bundle is empty.");
     }
 
-    // Call sendJitoBundle with the correct bundleToSend
-    const result = await sendJitoBundle(task, bundletoSend);
+    const result = await sendJitoBundle(task, bundleToSend);
     return result;
   } catch (error) {
-    console.error("\nBundle Construction Error: ", error);
+    console.error("Bundle Construction Error:", error);
+    return "bundleFail"; // Ensure the function returns a failure state if an error occurs
   }
 }
 
-async function sendJitoBundle(task, bundletoSend) {
-  const encodedBundle = bundletoSend.map(encodeTransactionToBase58);
+
+async function sendJitoBundle(task, bundleToSend) {
+  const encodedBundle = bundleToSend.map(encodeTransactionToBase58);
 
   const { balanceA: preJitoA, balanceB: preJitoB } = await getBalance(
     payer,
@@ -1150,10 +1145,9 @@ async function sendJitoBundle(task, bundletoSend) {
     selectedTokenA,
     selectedTokenB
   );
+  
   await checkOpenOrders();
   const preBundleOrders = checkArray;
-  // console.log(`PreJitoA: ${preJitoA}`);
-  // console.log(`PreJitoB: ${preJitoB}`);
 
   const data = {
     jsonrpc: "2.0",
@@ -1164,6 +1158,9 @@ async function sendJitoBundle(task, bundletoSend) {
 
   let response;
   const maxRetries = 5;
+  const MIN_WAIT = 1000; // Define appropriate min wait time
+  const MAX_WAIT = 30000; // Define appropriate max wait time
+
   for (let i = 0; i <= maxRetries; i++) {
     try {
       response = await fetch(JitoBlockEngine, {
@@ -1174,7 +1171,7 @@ async function sendJitoBundle(task, bundletoSend) {
         body: JSON.stringify(data),
       });
 
-      if (response.ok) break; // if response is ok, we break the loop
+      if (response.ok) break; // Exit loop if response is OK
 
       if (response.status === 429) {
         const waitTime = Math.min(MIN_WAIT * Math.pow(2, i), MAX_WAIT);
@@ -1186,27 +1183,25 @@ async function sendJitoBundle(task, bundletoSend) {
     } catch (error) {
       if (i === maxRetries) {
         console.error("Max retries exceeded");
-        program.exit(0);
+        process.exit(0);
       }
     }
   }
-  const responseText = await response.text(); // Get the response body as text
-  const responseData = JSON.parse(responseText); // Parse the response body as JSON
 
+  const responseText = await response.text();
+  const responseData = JSON.parse(responseText);
   const result = responseData.result;
   const url = `https://explorer.jito.wtf/bundle/${result}`;
   console.log(`\nResult ID: ${url}`);
-  // spinner.stop();
+
   console.log("Checking for 30 seconds...");
   let jitoChecks = 1;
   const maxChecks = 30;
-  let spinner;
   let bundleLanded = false;
+
   while (jitoChecks <= maxChecks) {
-    spinner = ora(
-      `Checking Jito Bundle Status... ${jitoChecks}/${maxChecks}`
-    ).start();
-    console.log("\nTask: ", task);
+    const spinner = ora(`Checking Jito Bundle Status... ${jitoChecks}/${maxChecks}`).start();
+
     try {
       const { balanceA: postJitoA, balanceB: postJitoB } = await getBalance(
         payer,
@@ -1215,18 +1210,18 @@ async function sendJitoBundle(task, bundletoSend) {
         selectedTokenA,
         selectedTokenB
       );
+
       if (postJitoA !== preJitoA || postJitoB !== preJitoB) {
         bundleLanded = true;
         spinner.stop();
-        console.log(
-          "\nBundle Landed, waiting 30 seconds for orders to finalize..."
-        );
+        console.log("\nBundle Landed, waiting 30 seconds for orders to finalize...");
+
         if (task !== "rebalance") {
           let bundleChecks = 1;
           while (bundleChecks <= 30) {
-            let postBundleOrders;
             await checkOpenOrders();
-            postBundleOrders = checkArray;
+            const postBundleOrders = checkArray;
+
             if (postBundleOrders !== preBundleOrders) {
               console.log("\nBundle Landed, Orders Updated, Skipping Timer");
               await delay(1000);
@@ -1239,46 +1234,44 @@ async function sendJitoBundle(task, bundletoSend) {
             }
           }
         }
+
         jitoChecks = 31;
         break;
       }
+
       jitoChecks++;
       await delay(1000);
     } catch (error) {
       console.error("Error in balance check:", error);
+    } finally {
+      spinner.stop();
     }
-    spinner.stop();
-  }
-
-  if (spinner) {
-    spinner.stop();
   }
 
   await checkOpenOrders();
   switch (task) {
     case "cancel":
       if (checkArray.length > 0) {
-        logger.log("Cancelling Orders Failed, Retrying...");
+        console.log("Cancelling Orders Failed, Retrying...");
         return "cancelFail";
       } else {
-        logger.log("Orders Cancelled Successfully");
+        console.log("Orders Cancelled Successfully");
         return "succeed";
       }
     case "infinity":
       if (checkArray.length !== 2) {
-        logger.log("Placing Infinity Orders Failed, Retrying...");
+        console.log("Placing Infinity Orders Failed, Retrying...");
         return "infinityFail";
       } else {
-        logger.log("Infinity Orders Placed Successfully");
+        console.log("Infinity Orders Placed Successfully");
         return "succeed";
       }
     case "rebalance":
-      // We dont need to check open orders here
       if (bundleLanded) {
-        logger.log("Rebalancing Tokens Successful");
+        console.log("Rebalancing Tokens Successful");
         return "succeed";
       } else {
-        logger.log("Rebalancing Tokens Failed, Retrying...");
+        console.log("Rebalancing Tokens Failed, Retrying...");
         return "rebalanceFail";
       }
     default:
@@ -1286,6 +1279,7 @@ async function sendJitoBundle(task, bundletoSend) {
       return "unknown";
   }
 }
+
 
 async function rebalanceTokens(
   inputMint,
