@@ -703,32 +703,29 @@ async function infinityGrid() {
 
 async function monitor() {
   if (shutDown) return;
+
   const maxRetries = 5;
   let retries = 0;
-  await updateMainDisplay();
-  while (retries < maxRetries) {
-    try {
+
+  try {
+    await updateMainDisplay();
+
+    while (retries < maxRetries) {
       await checkOpenOrders();
       await handleOrders(checkArray);
-      break; // Break the loop if we've successfully handled the price monitoring
-    } catch (error) {
-      console.log(error);
-      console.error(
-        `Error: Connection or Token Data Error (Monitor Price) - (Attempt ${
-          retries + 1
-        } of ${maxRetries})`
-      );
-      retries++;
-
-      if (retries === maxRetries) {
-        console.error(
-          "Maximum number of retries reached. Unable to retrieve data."
-        );
-        return null;
-      }
+      console.log("Price monitoring successful.");
+      return; // Exit the function after successful monitoring
     }
+  } catch (error) {
+    console.error("Error during price monitoring:", error);
+    console.error(`Error: Connection or Token Data Error (Monitor Price) - (Attempt ${retries + 1} of ${maxRetries})`);
   }
+
+  // If max retries reached or an error occurred, log and return null
+  console.error("Maximum number of retries reached. Unable to retrieve data.");
+  return null;
 }
+
 
 async function handleOrders(checkArray) {
   if (checkArray.length !== 2) {
